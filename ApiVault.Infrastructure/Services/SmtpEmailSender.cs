@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Mail;
-using ApiVault.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ApiVault.Infrastructure.Services;
@@ -21,7 +20,7 @@ public class SmtpOptions
 }
 
 /// <summary>Sends transactional email (verification, password reset) through an SMTP server.</summary>
-public class SmtpEmailSender(SmtpOptions options, ILogger<SmtpEmailSender> logger) : IEmailSender
+public class SmtpEmailSender(SmtpOptions options, ILogger<SmtpEmailSender> logger) : IEmailTransport
 {
     public async Task SendAsync(string toEmail, string subject, string body, CancellationToken ct = default)
     {
@@ -42,15 +41,7 @@ public class SmtpEmailSender(SmtpOptions options, ILogger<SmtpEmailSender> logge
         if (!string.IsNullOrEmpty(options.Username))
             client.Credentials = new NetworkCredential(options.Username, options.Password);
 
-        try
-        {
-            await client.SendMailAsync(message, ct);
-        }
-        catch (Exception ex)
-        {
-            // Never log the body: it contains one-time tokens.
-            logger.LogError("Failed to send email '{Subject}' via {Host}:{Port}: {Error}", subject, options.Host, options.Port, ex.Message);
-            throw;
-        }
+        await client.SendMailAsync(message, ct);
+        logger.LogInformation("Sent email '{Subject}' via {Host}", subject, options.Host);
     }
 }

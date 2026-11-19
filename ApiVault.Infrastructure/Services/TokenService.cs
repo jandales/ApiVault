@@ -51,7 +51,7 @@ public class TokenService(JwtOptions options) : ITokenService
 /// Development-only sender: writes the message to the log instead of sending email.
 /// Replace with a real provider before deployment.
 /// </summary>
-public class LoggingEmailSender(Microsoft.Extensions.Logging.ILogger<LoggingEmailSender> logger) : IEmailSender
+public class LoggingEmailSender(Microsoft.Extensions.Logging.ILogger<LoggingEmailSender> logger) : IEmailTransport
 {
     public Task SendAsync(string toEmail, string subject, string body, CancellationToken ct = default)
     {
