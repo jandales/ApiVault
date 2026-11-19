@@ -205,6 +205,60 @@ public class AuthService(
 
     public Task<UserDto?> GetCurrentUserAsync(string userId) => identity.GetUserAsync(userId);
 
+    /// <summary>
+    /// Signs in with a provider-verified identity: an already linked account, or an existing account with the same
+    /// verified email (linked now). Otherwise the browser must set up encryption first. Signing in never unlocks
+    /// secrets: the encryption password is still required in the browser.
+    /// </summary>
+    public async Task<ServiceResult<ExternalSignInOutcome>> ExternalSignInAsync(ExternalIdentity external, ClientContext ctx)
+    {
+        if (!external.EmailVerified || string.IsNullOrWhiteSpace(external.Email))
+            return ServiceResult<ExternalSignInOutcome>.Fail(ErrorKind.Validation, "The Google account email address is not verified.");
+
+        var user = await identity.FindByExternalLoginAsync(external.Provider, external.Subject);
+        if (user is null)
+        {
+            var existingId = await identity.FindUserIdByEmailAsync(external.Email);
+            if (existingId is null) return ServiceResult<ExternalSignInOutcome>.Ok(new ExternalSignInOutcome(null, external));
+
+            var linked = await identity.LinkExternalLoginAsync(existingId, external.Provider, external.Subject, confirmEmail: true);
+            if (!linked.Succeeded) return ServiceResult<ExternalSignInOutcome>.Fail(linked.Error, linked.Message!);
+            user = linked.Value!;
+            await events.AddAsync(user.Id, SecurityEventTypes.ExternalLoginLinked, ctx);
+        }
+
+        await events.AddAsync(user.Id, SecurityEventTypes.LoginSucceeded, ctx);
+        return ServiceResult<ExternalSignInOutcome>.Ok(new ExternalSignInOutcome(await IssueAsync(user, null), null));
+    }
+
+    /// <summary>Creates a Google-linked account with its vault (keys made in the browser), atomically, and signs in.</summary>
+    public async Task<ServiceResult<AuthResult>> ExternalRegisterAsync(ExternalIdentity external, string password, CreateVaultRequest vault, ClientContext ctx)
+    {
+        if (vault is null) return ServiceResult<AuthResult>.Fail(ErrorKind.Validation, "Registration failed.", ["Encrypted vault key material is required."]);
+        var errors = VaultValidator.ValidateCreate(vault);
+        if (errors.Count > 0) return ServiceResult<AuthResult>.Fail(ErrorKind.Validation, "Registration failed.", errors);
+        if (await identity.FindByExternalLoginAsync(external.Provider, external.Subject) is not null
+            || await identity.FindUserIdByEmailAsync(external.Email) is not null)
+            return ServiceResult<AuthResult>.Fail(ErrorKind.Conflict, "An account already exists. Continue with Google again to sign in.");
+        if (await vaults.ExistsAsync(vault.Id))
+            return ServiceResult<AuthResult>.Fail(ErrorKind.Validation, "Registration failed.", ["Invalid vault id."]);
+
+        var created = await transactions.InTransactionAsync(async () =>
+        {
+            var result = await identity.RegisterExternalAsync(external.Email, password, external.Provider, external.Subject);
+            if (!result.Succeeded) return result;
+            await vaults.AddAsync(VaultFactory.Build(result.Value!.Id, vault, DateTime.UtcNow));
+            return result;
+        });
+        if (!created.Succeeded) return ServiceResult<AuthResult>.Fail(created.Error, created.Message!, created.Details);
+
+        var user = created.Value!;
+        await events.AddAsync(user.Id, SecurityEventTypes.Registered, ctx);
+        await events.AddAsync(user.Id, SecurityEventTypes.VaultCreated, ctx);
+        await events.AddAsync(user.Id, SecurityEventTypes.LoginSucceeded, ctx);
+        return ServiceResult<AuthResult>.Ok(await IssueAsync(user, null));
+    }
+
     private async Task<AuthResult> IssueAsync(UserDto user, RefreshToken? rotating)
     {
         var (access, accessExpires) = tokens.CreateAccessToken(user);

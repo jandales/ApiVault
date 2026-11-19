@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/TestResults/
+ApiVault.Tests/
+.git/
+.gitignore
+Dockerfile
+.dockerignore

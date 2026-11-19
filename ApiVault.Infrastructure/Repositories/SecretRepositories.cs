@@ -31,10 +31,12 @@ public class SecretRepository(AppDbContext db) : ISecretRepository
         }
         if (!string.IsNullOrWhiteSpace(q.Search))
         {
-            var term = q.Search.Trim();
-            query = query.Where(s => s.Name.Contains(term)
-                || (s.Provider != null && s.Provider.Contains(term))
-                || (s.Description != null && s.Description.Contains(term)));
+            // Lower-case both sides so search ignores case on every database
+            // (SQL Server's default collation does; PostgreSQL's LIKE does not).
+            var term = q.Search.Trim().ToLowerInvariant();
+            query = query.Where(s => s.Name.ToLower().Contains(term)
+                || (s.Provider != null && s.Provider.ToLower().Contains(term))
+                || (s.Description != null && s.Description.ToLower().Contains(term)));
         }
 
         var total = await query.CountAsync(ct);

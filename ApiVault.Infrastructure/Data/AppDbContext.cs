@@ -1,12 +1,16 @@
 using ApiVault.Core.Entities;
 using ApiVault.Infrastructure.Identity;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiVault.Infrastructure.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser>(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser>(options), IDataProtectionKeyContext
 {
+    /// <summary>ASP.NET Data Protection keys (email/reset tokens, Google sign-in cookies), so they survive redeploys.</summary>
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     public DbSet<Vault> Vaults => Set<Vault>();
     public DbSet<VaultKeyWrapper> VaultKeyWrappers => Set<VaultKeyWrapper>();
     public DbSet<Secret> Secrets => Set<Secret>();
