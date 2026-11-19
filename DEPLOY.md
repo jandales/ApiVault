@@ -75,6 +75,13 @@ https://<your-frontend>.up.railway.app/api/v1/auth/google/callback
   links keep working across redeploys.
 - **Local development** is unchanged: SQL Server via `ConnectionStrings:DefaultConnection`. To try Postgres locally
   set `Database__Provider=Postgres` and a Npgsql connection string.
+- **Tests on PostgreSQL:** the suite uses in-memory SQLite by default. To run it against a real server (each test
+  class gets a throwaway database migrated with the PostgreSQL migrations, dropped afterwards):
+
+  ```powershell
+  $env:APIVAULT_TEST_POSTGRES="Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=<your password>"
+  dotnet test
+  ```
 - **New migrations** must be added for both providers:
 
   ```powershell
