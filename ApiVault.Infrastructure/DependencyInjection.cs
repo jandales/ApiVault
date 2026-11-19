@@ -42,15 +42,19 @@ public static class DependencyInjection
         services.AddScoped<ITransactionRunner, EfTransactionRunner>();
         services.AddScoped<ISecretRepository, SecretRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
+        // Email: requests only enqueue; a background worker delivers (see EmailQueue.cs for why).
         if (smtp is { IsConfigured: true })
         {
             services.AddSingleton(smtp);
-            services.AddSingleton<IEmailSender, SmtpEmailSender>();
+            services.AddSingleton<IEmailTransport, SmtpEmailSender>();
         }
         else
         {
-            services.AddSingleton<IEmailSender, LoggingEmailSender>(); // development fallback: link appears in the API log
+            services.AddSingleton<IEmailTransport, LoggingEmailSender>(); // development fallback: link appears in the API log
         }
+        services.AddSingleton<EmailQueue>();
+        services.AddSingleton<IEmailSender, QueuedEmailSender>();
+        services.AddHostedService<EmailDeliveryService>();
         return services;
     }
 }
