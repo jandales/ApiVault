@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="ApiVault.API/ApiVault.API.csproj" />
+  <Project Path="ApiVault.BusinessLayer/ApiVault.BusinessLayer.csproj" />
+  <Project Path="ApiVault.Core/ApiVault.Core.csproj" />
+  <Project Path="ApiVault.Infrastructure/ApiVault.Infrastructure.csproj" />
+  <Project Path="ApiVault.Tests/ApiVault.Tests.csproj" />
+</Solution>
