@@ -23,6 +23,7 @@ public class ApiFactory : WebApplicationFactory<Program>
 {
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
     public CapturingEmailSender Email { get; } = new();
+    public FakeGoogleAuthClient Google { get; } = new();
 
     static ApiFactory()
     {
@@ -45,6 +46,8 @@ public class ApiFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connection));
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Email);
+            services.RemoveAll<IGoogleAuthClient>();
+            services.AddSingleton<IGoogleAuthClient>(Google);
         });
     }
 

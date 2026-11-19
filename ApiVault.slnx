@@ -3,5 +3,6 @@
   <Project Path="ApiVault.BusinessLayer/ApiVault.BusinessLayer.csproj" />
   <Project Path="ApiVault.Core/ApiVault.Core.csproj" />
   <Project Path="ApiVault.Infrastructure/ApiVault.Infrastructure.csproj" />
+  <Project Path="ApiVault.Migrations.Postgres/ApiVault.Migrations.Postgres.csproj" />
   <Project Path="ApiVault.Tests/ApiVault.Tests.csproj" />
 </Solution>

@@ -25,6 +25,7 @@ public static class SecurityEventTypes
     public const string LoginSucceeded = "LoginSucceeded";
     public const string LoginFailed = "LoginFailed";
     public const string Logout = "Logout";
+    public const string ExternalLoginLinked = "ExternalLoginLinked";
     public const string RefreshTokenReuseDetected = "RefreshTokenReuseDetected";
     public const string EmailVerified = "EmailVerified";
     public const string PasswordResetRequested = "PasswordResetRequested";

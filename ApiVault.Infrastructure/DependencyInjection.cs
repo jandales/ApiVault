@@ -3,6 +3,7 @@ using ApiVault.Infrastructure.Data;
 using ApiVault.Infrastructure.Identity;
 using ApiVault.Infrastructure.Repositories;
 using ApiVault.Infrastructure.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,9 +12,21 @@ namespace ApiVault.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString, JwtOptions jwt, SmtpOptions? smtp = null)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, DatabaseSettings database, JwtOptions jwt, SmtpOptions? smtp = null, GoogleOptions? google = null)
     {
-        services.AddDbContext<AppDbContext>(o => o.UseSqlServer(connectionString));
+        services.AddDbContext<AppDbContext>(o =>
+        {
+            if (database.Provider == DatabaseProvider.Postgres)
+                o.UseNpgsql(database.ConnectionString, x => x.MigrationsAssembly(DatabaseSettings.PostgresMigrationsAssembly));
+            else
+                o.UseSqlServer(database.ConnectionString);
+        });
+
+        // Keys protect Identity tokens and the Google sign-in cookies; stored in the database so redeploys
+        // and multiple instances share them (containers have no persistent disk).
+        services.AddDataProtection()
+            .SetApplicationName("ApiVault")
+            .PersistKeysToDbContext<AppDbContext>();
 
         services.AddIdentityCore<ApplicationUser>(o =>
             {
@@ -52,6 +65,8 @@ public static class DependencyInjection
         {
             services.AddSingleton<IEmailTransport, LoggingEmailSender>(); // development fallback: link appears in the API log
         }
+        services.AddSingleton(google ?? new GoogleOptions());
+        services.AddHttpClient<IGoogleAuthClient, GoogleAuthClient>();
         services.AddSingleton<EmailQueue>();
         services.AddSingleton<IEmailSender, QueuedEmailSender>();
         services.AddHostedService<EmailDeliveryService>();

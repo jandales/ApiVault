@@ -4,6 +4,7 @@
     <ProjectReference Include="..\ApiVault.Core\ApiVault.Core.csproj" />
     <ProjectReference Include="..\ApiVault.BusinessLayer\ApiVault.BusinessLayer.csproj" />
     <ProjectReference Include="..\ApiVault.Infrastructure\ApiVault.Infrastructure.csproj" />
+    <ProjectReference Include="..\ApiVault.Migrations.Postgres\ApiVault.Migrations.Postgres.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -13,6 +14,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.*" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -21,5 +23,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>e19c7cee-1859-4e64-8076-8318906b934a</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Dev-only settings (local connection string, placeholder JWT key) never ship in a published build. -->
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
 
 </Project>

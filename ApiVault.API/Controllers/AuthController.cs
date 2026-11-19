@@ -11,8 +11,7 @@ namespace ApiVault.API.Controllers;
 [Route("api/v1/auth")]
 public class AuthController(IAuthService auth) : ControllerBase
 {
-    private const string RefreshCookie = "av_refresh";
-    private const string RefreshCookiePath = "/api/v1/auth";
+    private const string RefreshCookie = Extensions.RefreshCookie.Name;
 
     [HttpPost("prelogin"), EnableRateLimiting("auth")]
     public async Task<IActionResult> Prelogin(PreloginRequest request) => Ok(await auth.PreloginAsync(request));
@@ -96,23 +95,11 @@ public class AuthController(IAuthService auth) : ControllerBase
         return user is null ? Unauthorized() : Ok(user);
     }
 
-    private void SetRefreshCookie(AuthResult result) =>
-        Response.Cookies.Append(RefreshCookie, result.RawRefreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Path = RefreshCookiePath,
-            Expires = result.RefreshExpiresAt,
-            IsEssential = true,
-        });
+    /// <summary>Which sign-in methods are available, so the UI only shows configured ones.</summary>
+    [HttpGet("providers")]
+    public IActionResult Providers([FromServices] IGoogleAuthClient google) => Ok(new AuthProvidersResponse(google.IsConfigured));
 
-    private void ClearRefreshCookie() =>
-        Response.Cookies.Delete(RefreshCookie, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Path = RefreshCookiePath,
-        });
+    private void SetRefreshCookie(AuthResult result) => Extensions.RefreshCookie.Set(Response, result);
+
+    private void ClearRefreshCookie() => Extensions.RefreshCookie.Clear(Response);
 }

@@ -10,6 +10,11 @@ public interface IIdentityService
     Task<ServiceResult<UserDto>> ValidateCredentialsAsync(string email, string password);
     Task<UserDto?> GetUserAsync(string userId);
     Task<string?> FindUserIdByEmailAsync(string email);
+    Task<UserDto?> FindByExternalLoginAsync(string provider, string providerKey);
+    /// <summary>Links an external login to an existing account; optionally marks the email confirmed (the provider verified it).</summary>
+    Task<ServiceResult<UserDto>> LinkExternalLoginAsync(string userId, string provider, string providerKey, bool confirmEmail);
+    /// <summary>Creates an account with a derived auth key and a linked external login; the email is already verified.</summary>
+    Task<ServiceResult<UserDto>> RegisterExternalAsync(string email, string password, string provider, string providerKey);
     /// <summary>Checks a password-reset token without consuming it. Returns the user id, or null if invalid.</summary>
     Task<string?> VerifyPasswordResetTokenAsync(string email, string token);
     Task<string?> GenerateEmailConfirmationTokenAsync(string email);
@@ -51,6 +56,18 @@ public interface IAuthService
     Task ForgotPasswordAsync(ForgotPasswordRequest request, ClientContext ctx);
     Task<ServiceResult<UserDto>> ResetPasswordAsync(ResetPasswordRequest request, ClientContext ctx);
     Task<UserDto?> GetCurrentUserAsync(string userId);
+    Task<ServiceResult<ExternalSignInOutcome>> ExternalSignInAsync(ExternalIdentity identity, ClientContext ctx);
+    Task<ServiceResult<AuthResult>> ExternalRegisterAsync(ExternalIdentity identity, string password, CreateVaultRequest vault, ClientContext ctx);
+}
+
+/// <summary>Server-side Google OAuth (authorization code + PKCE). No Google JavaScript runs in the app.</summary>
+public interface IGoogleAuthClient
+{
+    bool IsConfigured { get; }
+    string RedirectUri { get; }
+    string BuildAuthorizationUrl(string state, string codeChallenge, string nonce);
+    /// <summary>Exchanges the code and validates the ID token (signature, audience, expiry, nonce). Null if anything is invalid.</summary>
+    Task<ExternalIdentity?> ExchangeCodeAsync(string code, string codeVerifier, string expectedNonce, CancellationToken ct = default);
 }
 
 /// <summary>Each account has exactly one vault, created at registration; it cannot be created or deleted separately.</summary>
