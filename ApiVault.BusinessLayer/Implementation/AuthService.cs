@@ -140,7 +140,7 @@ public class AuthService(
         var token = await identity.GeneratePasswordResetTokenAsync(request.Email);
         if (token is null) return;
         var link = $"{options.FrontendUrl}/forgot-password?email={Uri.EscapeDataString(request.Email)}&token={Uri.EscapeDataString(token)}";
-        await email.SendAsync(request.Email, "Reset your API Vault password",
+        await email.SendAsync(request.Email, "Reset your Aurex password",
             $"Use this link to reset your password: {link}\n\n" +
             "To keep your secrets you will need your recovery key. Without it, you can still reset, but your stored secrets will be erased.");
     }
@@ -283,8 +283,8 @@ public class AuthService(
         var token = await identity.GenerateEmailConfirmationTokenAsync(address);
         if (token is null) return;
         var link = $"{options.FrontendUrl}/verify-email?email={Uri.EscapeDataString(address)}&token={Uri.EscapeDataString(token)}";
-        await email.SendAsync(address, "Verify your API Vault email",
-            $"Confirm your email address for API Vault by opening this link:\n\n{link}\n\n" +
+        await email.SendAsync(address, "Verify your Aurex email",
+            $"Confirm your email address for Aurex by opening this link:\n\n{link}\n\n" +
             "If you didn't create an account, you can ignore this email.");
     }
 }

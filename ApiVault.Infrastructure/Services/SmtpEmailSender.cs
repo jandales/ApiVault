@@ -15,7 +15,7 @@ public class SmtpOptions
     /// <summary>Keep out of appsettings: use user-secrets or an environment variable.</summary>
     public string? Password { get; set; }
     public string From { get; set; } = string.Empty;
-    public string FromName { get; set; } = "API Vault";
+    public string FromName { get; set; } = "Aurex";
     public bool IsConfigured => !string.IsNullOrWhiteSpace(Host) && !string.IsNullOrWhiteSpace(From);
 }
 
