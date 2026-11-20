@@ -1,4 +1,4 @@
-# Deploying API Vault to Railway
+# Deploying Aurex to Railway
 
 Three services in one Railway project:
 
@@ -35,7 +35,7 @@ Variables (Service → Variables):
 | `Email__Smtp__Username` | SMTP username |
 | `Email__Smtp__Password` | SMTP password |
 | `Email__Smtp__From` | sender address |
-| `Email__Smtp__FromName` | `API Vault` |
+| `Email__Smtp__FromName` | `Aurex` |
 
 Generate the JWT key in PowerShell:
 
