@@ -45,7 +45,7 @@ public static class SecretValidator
     {
         if (string.IsNullOrWhiteSpace(name) || name.Length > 200) errors.Add("Name is required (max 200 characters).");
         if (description is { Length: > 500 }) errors.Add("Description must be at most 500 characters.");
-        if (type is null || !SecretTypes.All.Contains(type)) errors.Add("Secret type must be ApiKey, Password or SecureNote.");
+        if (type is null || !SecretTypes.All.Contains(type)) errors.Add($"Secret type must be one of: {string.Join(", ", SecretTypes.All)}.");
         if (provider is { Length: > 150 }) errors.Add("Provider must be at most 150 characters.");
         if (environment is { Length: > 30 }) errors.Add("Environment must be at most 30 characters.");
         if (tagIds is { Count: > SecretLimits.MaxTagsPerSecret }) errors.Add($"At most {SecretLimits.MaxTagsPerSecret} tags per secret.");

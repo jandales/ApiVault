@@ -192,6 +192,22 @@ public class SecretSecurityTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task OAuth_client_items_are_accepted_and_filterable_by_type()
+    {
+        var u = await TestClient.RegisterAndLoginAsync(_f);
+        var vaultId = u.VaultId;
+        var id = await CreateSecretAsync(u, NewSecret(vaultId, "Google OAuth client", "OAuthClient", provider: "Google"));
+        await CreateSecretAsync(u, NewSecret(vaultId, "Some API key", "ApiKey"));
+
+        var s = await u.Http.GetFromJsonAsync<JsonElement>($"/api/v1/secrets/{id}");
+        Assert.Equal("OAuthClient", s.GetProperty("secretType").GetString());
+
+        var list = await u.Http.GetFromJsonAsync<JsonElement>($"/api/v1/secrets?vaultId={vaultId}&secretType=OAuthClient");
+        Assert.Equal(1, list.GetProperty("totalCount").GetInt32());
+        Assert.Equal("Google OAuth client", list.GetProperty("items")[0].GetProperty("name").GetString());
+    }
+
+    [Fact]
     public async Task List_filters_by_search_type_tag_and_expiry()
     {
         var u = await TestClient.RegisterAndLoginAsync(_f);

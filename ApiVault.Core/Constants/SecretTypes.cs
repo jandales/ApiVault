@@ -5,7 +5,9 @@ public static class SecretTypes
     public const string ApiKey = "ApiKey";
     public const string Password = "Password";
     public const string SecureNote = "SecureNote";
-    public static readonly string[] All = [ApiKey, Password, SecureNote];
+    /// <summary>OAuth / OIDC client credentials (client ID + client secret), both inside the encrypted payload.</summary>
+    public const string OAuthClient = "OAuthClient";
+    public static readonly string[] All = [ApiKey, Password, SecureNote, OAuthClient];
 }
 
 public static class SecretLimits
